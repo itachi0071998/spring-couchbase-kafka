@@ -11,7 +11,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Getter
 @Setter
-public class Product {
+public class Price {
     @Id
     private String documentId;
 
@@ -33,7 +33,7 @@ public class Product {
 
     @Override
     public String toString() {
-        return "Product{" +
+        return "Price{" +
                 "id='" + documentId + '\'' +
                 ", name='" + gtin + '\'' +
                 ", price=" + minimumPrice +
