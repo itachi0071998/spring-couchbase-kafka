@@ -1,6 +1,7 @@
 package com.tesco.demo.controller;
 
 
+import com.tesco.demo.infrastructure.kafkaReactor.KafkaReactorProducer;
 import com.tesco.demo.model.Price;
 import com.tesco.demo.infrastructure.repository.PriceRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -16,10 +17,12 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/minprice")
 public class MinimumPriceController {
 
-    @Autowired
-    private KafkaProducer producer;
+//    @Autowired
+//    private KafkaProducer producer;
     @Autowired
     private PriceRepository repository;
+
+    private KafkaReactorProducer sender = new KafkaReactorProducer();
 
 
     @GetMapping("{documentId}")
@@ -33,8 +36,9 @@ public class MinimumPriceController {
     public Mono<ResponseEntity<String>> saveProduct(@RequestHeader(value = "documentId") String documentId,
             @RequestBody Price price) {
         price.setDocumentId(documentId);
-        producer.sendMessage(price.toString());
-        return repository.save(price)
+//        sender.sendMessages(price);
+//        producer.sendMessage(price.toString());
+        return repository.save(price).doOnNext(response -> sender.sendMessages(response))
                 .doOnError(error -> {log.error("error found {}", error);
                     ResponseEntity.badRequest().body(error);})
                 .map(response -> ResponseEntity.accepted().body("location: /minprice/"+response.getDocumentId()));
@@ -43,7 +47,7 @@ public class MinimumPriceController {
     @PutMapping("{documentId}")
     public Mono<ResponseEntity<String>> updateProduct(@PathVariable String documentId,
                                                        @RequestBody Price price) {
-        producer.sendMessage(price.toString());
+//        producer.sendMessage(price.toString());
         return repository.findById(documentId)
                 .flatMap(existingPrice -> {
                     existingPrice.setCountry(price.getCountry());
