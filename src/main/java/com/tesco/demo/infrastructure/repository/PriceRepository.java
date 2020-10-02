@@ -13,4 +13,5 @@ public interface PriceRepository
 
     @Query("#{#n1ql.selectEntity} where #{#n1ql.filter} AND gtin = $1 ")
     Flux<Price> findByGtin(String gtin);
+
 }

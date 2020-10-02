@@ -1,56 +1,55 @@
-package com.tesco.demo.controller;
+package com.tesco.demo.application.controller;
 
 
-import com.tesco.demo.infrastructure.kafkaReactor.KafkaReactorConsumer;
-import com.tesco.demo.infrastructure.kafkaReactor.KafkaReactorProducer;
+import com.tesco.demo.application.constants.EndPointConstant;
+import com.tesco.demo.infrastructure.kafkaReactor.KafkaMessageReceiver;
+import com.tesco.demo.infrastructure.kafkaReactor.KafkaPublisher;
 import com.tesco.demo.model.Price;
 import com.tesco.demo.infrastructure.repository.PriceRepository;
 import lombok.extern.slf4j.Slf4j;
-//import com.tesco.demo.infrastructure.kafka.KafkaProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
-@RequestMapping("/minprice")
+@RequestMapping(EndPointConstant.MINIMUM_PRICE)
 public class MinimumPriceController {
 
-//    @Autowired
-//    private KafkaProducer producer;
     @Autowired
     private PriceRepository repository;
-    @Autowired
-    private KafkaReactorProducer kafkaPublisher;
 
     @Autowired
-    private KafkaReactorConsumer kafkaConsumer;
+    private KafkaPublisher kafkaPublisher;
 
-    @GetMapping("{documentId}")
-    public Mono<ResponseEntity<Price>> getProduct(@PathVariable String documentId) {
+    @Autowired
+    private KafkaMessageReceiver kafkaConsumer;
+
+    @GetMapping(EndPointConstant.DOCUMENT_ID)
+    public Mono<ResponseEntity<String>> getProduct(@PathVariable String documentId) {
         return repository.findById(documentId)
-                .map(price -> ResponseEntity.accepted().body(price))
+                .map(price -> ResponseEntity.accepted().body(price.toString()))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Mono<ResponseEntity<String>> saveProduct(@RequestHeader(value = "documentId") String documentId,
-            @RequestBody Price price) {
-        price.setDocumentId(documentId);
+    public Mono<ResponseEntity<String>> saveProduct(@RequestBody Price price) {
+        price.setDocumentId(UUID.randomUUID().toString());
         return repository.save(price).doOnNext(response -> kafkaPublisher.sendMessages(response))
                 .doOnError(error -> {log.error("error found {}", error);
                     ResponseEntity.badRequest().body(error);})
                 .map(response -> {
                     kafkaConsumer.consumeMessage();
-                    return ResponseEntity.accepted().body("location: /minprice/"+response.getDocumentId());});
+                    return ResponseEntity.accepted().body("location:" +EndPointConstant.MINIMUM_PRICE + "/" + response.getDocumentId());});
     }
 
-    @PutMapping("{documentId}")
+    @PutMapping(EndPointConstant.DOCUMENT_ID)
     public Mono<ResponseEntity<String>> updateProduct(@PathVariable String documentId,
                                                        @RequestBody Price price) {
-//        producer.sendMessage(price.toString());
         return repository.findById(documentId)
                 .flatMap(existingPrice -> {
                     existingPrice.setCountry(price.getCountry());
@@ -65,7 +64,7 @@ public class MinimumPriceController {
                 }).doOnNext(response -> kafkaPublisher.sendMessages(response))
                 .map(updatePrice -> {
                     kafkaConsumer.consumeMessage();
-                    return ResponseEntity.accepted().body("location: /minprice/"+ updatePrice.getDocumentId());})
+                    return ResponseEntity.accepted().body("location:" +EndPointConstant.MINIMUM_PRICE + "/"+ updatePrice.getDocumentId());})
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
@@ -75,8 +74,9 @@ public class MinimumPriceController {
                 .doOnError(error -> {
                     log.error("the error is {}", error);
                 ResponseEntity.notFound().build();})
-                .map(response -> ResponseEntity.accepted().body(response));
+                .map(response -> ResponseEntity.accepted().body(response.toString()));
     }
+
 }
 
 
