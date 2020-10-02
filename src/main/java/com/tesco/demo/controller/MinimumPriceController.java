@@ -1,11 +1,12 @@
 package com.tesco.demo.controller;
 
 
+import com.tesco.demo.infrastructure.kafkaReactor.KafkaReactorConsumer;
 import com.tesco.demo.infrastructure.kafkaReactor.KafkaReactorProducer;
 import com.tesco.demo.model.Price;
 import com.tesco.demo.infrastructure.repository.PriceRepository;
 import lombok.extern.slf4j.Slf4j;
-import com.tesco.demo.infrastructure.kafka.KafkaProducer;
+//import com.tesco.demo.infrastructure.kafka.KafkaProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +22,11 @@ public class MinimumPriceController {
 //    private KafkaProducer producer;
     @Autowired
     private PriceRepository repository;
+    @Autowired
+    private KafkaReactorProducer kafkaPublisher;
 
-    private KafkaReactorProducer sender = new KafkaReactorProducer();
-
+    @Autowired
+    private KafkaReactorConsumer kafkaConsumer;
 
     @GetMapping("{documentId}")
     public Mono<ResponseEntity<Price>> getProduct(@PathVariable String documentId) {
@@ -36,12 +39,12 @@ public class MinimumPriceController {
     public Mono<ResponseEntity<String>> saveProduct(@RequestHeader(value = "documentId") String documentId,
             @RequestBody Price price) {
         price.setDocumentId(documentId);
-//        sender.sendMessages(price);
-//        producer.sendMessage(price.toString());
-        return repository.save(price).doOnNext(response -> sender.sendMessages(response))
+        return repository.save(price).doOnNext(response -> kafkaPublisher.sendMessages(response))
                 .doOnError(error -> {log.error("error found {}", error);
                     ResponseEntity.badRequest().body(error);})
-                .map(response -> ResponseEntity.accepted().body("location: /minprice/"+response.getDocumentId()));
+                .map(response -> {
+                    kafkaConsumer.consumeMessage();
+                    return ResponseEntity.accepted().body("location: /minprice/"+response.getDocumentId());});
     }
 
     @PutMapping("{documentId}")
@@ -59,8 +62,10 @@ public class MinimumPriceController {
                     existingPrice.setGtin(price.getGtin());
                     existingPrice.setReason(price.getReason());
                     return repository.save(existingPrice);
-                })
-                .map(updatePrice -> ResponseEntity.accepted().body("location: /minprice/"+ updatePrice.getDocumentId()))
+                }).doOnNext(response -> kafkaPublisher.sendMessages(response))
+                .map(updatePrice -> {
+                    kafkaConsumer.consumeMessage();
+                    return ResponseEntity.accepted().body("location: /minprice/"+ updatePrice.getDocumentId());})
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
