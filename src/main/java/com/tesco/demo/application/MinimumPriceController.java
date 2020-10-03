@@ -1,4 +1,4 @@
-package com.tesco.demo.application.controller;
+package com.tesco.demo.application;
 
 
 import com.tesco.demo.application.constants.EndPointConstant;
@@ -30,15 +30,15 @@ public class MinimumPriceController {
     private KafkaMessageReceiver kafkaConsumer;
 
     @GetMapping(EndPointConstant.DOCUMENT_ID)
-    public Mono<ResponseEntity<String>> getProduct(@PathVariable String documentId) {
+    public Mono<ResponseEntity<String>> getMinimumPrice(@PathVariable String documentId) {
         return repository.findById(documentId)
                 .map(price -> ResponseEntity.accepted().body(price.toString()))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Mono<ResponseEntity<String>> saveProduct(@RequestBody Price price) {
-        price.setDocumentId(UUID.randomUUID().toString());
+    public Mono<ResponseEntity<String>> createMinimumPrice(@RequestHeader String documentId, @RequestBody Price price) {
+        price.setDocumentId(documentId);
         return repository.save(price).doOnNext(response -> kafkaPublisher.sendMessages(response))
                 .doOnError(error -> {log.error("error found {}", error);
                     ResponseEntity.badRequest().body(error);})
@@ -48,7 +48,7 @@ public class MinimumPriceController {
     }
 
     @PutMapping(EndPointConstant.DOCUMENT_ID)
-    public Mono<ResponseEntity<String>> updateProduct(@PathVariable String documentId,
+    public Mono<ResponseEntity<String>> updateMinimumPrice(@PathVariable String documentId,
                                                        @RequestBody Price price) {
         return repository.findById(documentId)
                 .flatMap(existingPrice -> {
@@ -69,7 +69,7 @@ public class MinimumPriceController {
     }
 
     @GetMapping
-    public Flux getProductByGtin(@RequestParam String gtin){
+    public Flux getMinimumPriceByGtin(@RequestParam String gtin){
         return repository.findByGtin(gtin).doOnNext(response -> log.info("the response is {}", response))
                 .doOnError(error -> {
                     log.error("the error is {}", error);
