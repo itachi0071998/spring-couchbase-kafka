@@ -31,13 +31,10 @@ public class MinimumPriceControllerTest {
     private MinimumPriceController priceController;
 
     @Mock
-    @Autowired
     private PriceRepository repository;
     @Mock
-    @Autowired
     private KafkaPublisher kafkaPublisher;
     @Mock
-    @Autowired
     private KafkaMessageReceiver kafkaMessageReceiver;
 
     private Price price;

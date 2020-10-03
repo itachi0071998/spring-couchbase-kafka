@@ -55,7 +55,7 @@ public class KafkaPublisher {
         if (null != senderResult.exception()) {
             throw new RuntimeException(senderResult.exception());
         }
-        log.debug("MSG=Completed publishing message to CommandBus, topic={}, correlationMetadata={}, " +
+        log.debug("MSG=Completed publishing message to topic={}, correlationMetadata={}, " +
                         "commandStatusId={}, priceIntentId={}",
                 ApplicationConstants.TOPIC, senderResult.correlationMetadata(), commandMessage.getDocumentId(),
                 commandMessage.getGtin());
