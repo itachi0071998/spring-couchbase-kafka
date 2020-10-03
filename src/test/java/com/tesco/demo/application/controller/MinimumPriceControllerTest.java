@@ -66,7 +66,7 @@ public class MinimumPriceControllerTest {
         Mono<ResponseEntity<String>> createMinimumPriceResponse = priceController.createMinimumPrice(documentId, price);
         StepVerifier.create(createMinimumPriceResponse)
                 .expectNextMatches(responseEntity -> {
-                    Assert.assertThat(responseEntity.getStatusCode(), is(HttpStatus.ACCEPTED));
+                    Assert.assertThat(responseEntity.getStatusCode(), is(HttpStatus.OK));
                     Assert.assertNotNull(responseEntity.getBody());
                     return true;
                 }).verifyComplete();
@@ -78,7 +78,7 @@ public class MinimumPriceControllerTest {
         Mono<ResponseEntity<String>> getMinimumPriceResponse = priceController.getMinimumPrice(documentId);
         StepVerifier.create(getMinimumPriceResponse)
                 .expectNextMatches(responseEntity -> {
-                    Assert.assertThat(responseEntity.getStatusCode(), is(HttpStatus.ACCEPTED));
+                    Assert.assertThat(responseEntity.getStatusCode(), is(HttpStatus.OK));
                     Assert.assertThat(responseEntity.getBody(), is(price.toString()));
                     return true;
                 })
@@ -92,7 +92,7 @@ public class MinimumPriceControllerTest {
         Mono<ResponseEntity<String>> updateMinimumPriceResponse = priceController.updateMinimumPrice(documentId, price);
         StepVerifier.create(updateMinimumPriceResponse)
                 .expectNextMatches(responseEntity -> {
-                    Assert.assertThat(responseEntity.getStatusCode(), is(HttpStatus.ACCEPTED));
+                    Assert.assertThat(responseEntity.getStatusCode(), is(HttpStatus.OK));
                     Assert.assertNotNull(responseEntity.getBody());
                     return true;
                 }).verifyComplete();
@@ -104,7 +104,7 @@ public class MinimumPriceControllerTest {
         Flux getMinimumPriceByGtinResponse = priceController.getMinimumPriceByGtin(gtin);
         StepVerifier.create(getMinimumPriceByGtinResponse)
                 .expectNextMatches(responseEntity -> {
-                    Assert.assertNotNull(responseEntity);
+                    Assert.assertThat(responseEntity, is(price));
                     return true;
                 }).verifyComplete();
     }

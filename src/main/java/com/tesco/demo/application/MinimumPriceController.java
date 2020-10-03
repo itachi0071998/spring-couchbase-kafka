@@ -8,6 +8,7 @@ import com.tesco.demo.model.Price;
 import com.tesco.demo.infrastructure.repository.PriceRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -31,7 +32,7 @@ public class MinimumPriceController {
     @GetMapping(EndPointConstant.DOCUMENT_ID)
     public Mono<ResponseEntity<String>> getMinimumPrice(@PathVariable String documentId) {
         return repository.findById(documentId)
-                .map(price -> ResponseEntity.accepted().body(price.toString()))
+                .map(price -> ResponseEntity.ok(price.toString()))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
@@ -43,7 +44,7 @@ public class MinimumPriceController {
                     ResponseEntity.badRequest().body(error);})
                 .map(response -> {
                     kafkaConsumer.consumeMessage();
-                    return ResponseEntity.accepted().body("location:" +EndPointConstant.MINIMUM_PRICE + "/" + response.getDocumentId());});
+                    return ResponseEntity.ok("location:" +EndPointConstant.MINIMUM_PRICE + "/" + response.getDocumentId());});
     }
 
     @PutMapping(EndPointConstant.DOCUMENT_ID)
@@ -63,17 +64,18 @@ public class MinimumPriceController {
                 }).doOnNext(response -> kafkaPublisher.sendMessages(response))
                 .map(updatePrice -> {
                     kafkaConsumer.consumeMessage();
-                    return ResponseEntity.accepted().body("location:" +EndPointConstant.MINIMUM_PRICE + "/"+ updatePrice.getDocumentId());})
+                    return ResponseEntity.ok("location:" +EndPointConstant.MINIMUM_PRICE + "/"+ updatePrice.getDocumentId());})
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public Flux getMinimumPriceByGtin(@RequestParam String gtin){
         return repository.findByGtin(gtin).doOnNext(response -> log.info("the response is {}", response))
                 .doOnError(error -> {
                     log.error("the error is {}", error);
                 ResponseEntity.notFound().build();})
-                .map(response -> ResponseEntity.accepted().body(response.toString()));
+                .map(response -> response);
     }
 
 }
