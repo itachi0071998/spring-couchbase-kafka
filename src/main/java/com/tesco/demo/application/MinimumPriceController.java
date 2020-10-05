@@ -1,6 +1,7 @@
 package com.tesco.demo.application;
 
 
+import com.tesco.demo.application.constants.ApplicationConstants;
 import com.tesco.demo.application.constants.EndPointConstant;
 import com.tesco.demo.infrastructure.kafkaReactor.KafkaMessageReceiver;
 import com.tesco.demo.infrastructure.kafkaReactor.KafkaPublisher;
@@ -39,7 +40,9 @@ public class MinimumPriceController {
     @PostMapping
     public Mono<ResponseEntity<String>> createMinimumPrice(@RequestHeader String documentId, @RequestBody Price price) {
         price.setDocumentId(documentId);
-        return repository.save(price).doOnNext(response -> kafkaPublisher.sendMessages(response))
+        return repository.save(price)
+                .flatMap(response -> kafkaPublisher.publisher(response))
+                .doOnNext(response -> log.info("{} published to the topic {}", response.toString(), ApplicationConstants.TOPIC))
                 .doOnError(error -> {log.error("error found {}", error);
                     ResponseEntity.badRequest().body(error);})
                 .map(response -> {
@@ -60,8 +63,9 @@ public class MinimumPriceController {
                     existingPrice.setEnrichedEventId(price.getEnrichedEventId());
                     existingPrice.setGtin(price.getGtin());
                     existingPrice.setReason(price.getReason());
-                    return repository.save(existingPrice);
-                }).doOnNext(response -> kafkaPublisher.sendMessages(response))
+                    return repository.save(existingPrice); })
+                .flatMap(response -> kafkaPublisher.publisher(response))
+                .doOnNext(response -> log.info("{} published to the topic {}", response.toString(), ApplicationConstants.TOPIC))
                 .map(updatePrice -> {
                     kafkaConsumer.consumeMessage();
                     return ResponseEntity.ok("location:" +EndPointConstant.MINIMUM_PRICE + "/"+ updatePrice.getDocumentId());})

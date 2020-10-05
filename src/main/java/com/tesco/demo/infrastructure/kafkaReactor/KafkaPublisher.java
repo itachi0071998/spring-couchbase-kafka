@@ -33,15 +33,18 @@ public class KafkaPublisher {
         sender = KafkaSender.create(senderOptions);
     }
 
-    public void sendMessages(Price commandMessage) {
+    public Mono<Price> publisher(Price price){
+        return sendMessages(price).single().map(response -> price);
+    }
+
+    private Flux<String> sendMessages(Price commandMessage) {
         log.info("MSG=Publishing Message to topic={}, DocumentId={}",
                 ApplicationConstants.TOPIC, commandMessage.getDocumentId());
-        Flux.defer(() -> sender.send(Mono.just(createSenderRecord(commandMessage))))
+        return Flux.defer(() -> sender.send(Mono.just(createSenderRecord(commandMessage))))
                 .doOnNext(resultData -> log.info("MSG=Completed publishing message on to topic={} DocumentId={} topicPartitionDetails={}",
                         ApplicationConstants.TOPIC, commandMessage.getDocumentId(),resultData.recordMetadata().toString()))
-                .concatMap(resultData -> processSenderResult(resultData, commandMessage))
-                .doOnError(error -> log.error("MSG=Error in posting Message to topic={}, documentId={}, error={}", ApplicationConstants.TOPIC, commandMessage.getDocumentId(), error))
-        .subscribe();
+                .map(resultData -> processSenderResult(resultData, commandMessage))
+                .doOnError(error -> log.error("MSG=Error in posting Message to topic={}, documentId={}, error={}", ApplicationConstants.TOPIC, commandMessage.getDocumentId(), error));
     }
 
     private SenderRecord<String, String, String> createSenderRecord(Price commandMessage) {
@@ -51,7 +54,7 @@ public class KafkaPublisher {
         return SenderRecord.create(producerRecord, commandMessage.getDocumentId());
     }
 
-    private Mono<String> processSenderResult(SenderResult senderResult, Price commandMessage) {
+    private String processSenderResult(SenderResult<String> senderResult, Price commandMessage) {
         if (null != senderResult.exception()) {
             throw new RuntimeException(senderResult.exception());
         }
@@ -59,7 +62,7 @@ public class KafkaPublisher {
                         "commandStatusId={}, priceIntentId={}",
                 ApplicationConstants.TOPIC, senderResult.correlationMetadata(), commandMessage.getDocumentId(),
                 commandMessage.getGtin());
-        return Mono.just(senderResult.correlationMetadata().toString());
+        return senderResult.correlationMetadata().toString();
     }
 
 }
