@@ -6,8 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -15,10 +13,10 @@ import reactor.test.StepVerifier;
 import static org.hamcrest.CoreMatchers.is;
 
 @RunWith(MockitoJUnitRunner.class)
-public class KafkaPublisherTest {
+public class KafkaMessageProducerTest {
 
     @InjectMocks
-    private KafkaPublisher kafkaPublisher;
+    private KafkaMessageProducer kafkaMessageProducer;
 
     private Price price;
 
@@ -36,7 +34,7 @@ public class KafkaPublisherTest {
 
     @Test
     public void publisherTest(){
-        Mono<Price> publisherResponse = kafkaPublisher.publisher(price);
+        Mono<Price> publisherResponse = kafkaMessageProducer.publisher(price);
         StepVerifier.create(publisherResponse)
                 .expectNextMatches(response -> {
                     Assert.assertThat(response.toString(), is(price.toString()));

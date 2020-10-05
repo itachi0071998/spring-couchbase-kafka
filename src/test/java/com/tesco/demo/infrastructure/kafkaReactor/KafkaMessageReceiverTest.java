@@ -2,6 +2,7 @@ package com.tesco.demo.infrastructure.kafkaReactor;
 
 import com.tesco.demo.model.Price;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,7 +14,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.kafka.receiver.KafkaReceiver;
+import reactor.kafka.receiver.ReceiverOffset;
 import reactor.kafka.receiver.ReceiverRecord;
 import reactor.test.StepVerifier;
 
@@ -26,6 +29,9 @@ public class KafkaMessageReceiverTest {
 
     @Mock
     private KafkaReceiver<String, String> kafkaReceiver;
+
+    @Mock
+    private KafkaConsumerConfig kafkaConsumerConfig;
 
 
     private Price price;
@@ -43,19 +49,35 @@ public class KafkaMessageReceiverTest {
                 .effectiveDateTime(231231231).build();
         ConsumerRecord<String, String> consumerRecord =
                 new ConsumerRecord<String, String>("prices", 0, 1, "consumer", price.toString());
-        receiverRecord = new ReceiverRecord<String, String>(consumerRecord, null);
+        receiverRecord = new ReceiverRecord<String, String>(consumerRecord, new ReceiverOffset() {
+            @Override
+            public TopicPartition topicPartition() {
+                return null;
+            }
+
+            @Override
+            public long offset() {
+                return 0;
+            }
+
+            @Override
+            public void acknowledge() {
+
+            }
+
+            @Override
+            public Mono<Void> commit() {
+                return Mono.empty();
+            }
+        });
     }
 
     @Test
     public void consumeMessageTest(){
         Flux<ReceiverRecord<String, String>> fluxRecord = Flux.just(receiverRecord);
+        Mockito.when(kafkaConsumerConfig.receiver()).thenReturn(kafkaReceiver);
         Mockito.when(kafkaReceiver.receive()).thenReturn(fluxRecord);
-        Flux<Disposable> consumeMessageResponse = kafkaMessageReceiver.consumeMessage();
-        StepVerifier.create(consumeMessageResponse)
-                .expectNextMatches(r -> {
-                    Assert.assertNotNull(r);
-                    return true;
-                }).verifyComplete();
-//        Mockito.verify(kafkaReceiver, Mockito.times(1)).receive();
+        kafkaMessageReceiver.consumeMessage();
+        Mockito.verify(kafkaReceiver, Mockito.times(1)).receive();
     }
 }

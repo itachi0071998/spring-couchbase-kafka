@@ -3,7 +3,7 @@ package com.tesco.demo.application.controller;
 
 import com.tesco.demo.application.MinimumPriceController;
 import com.tesco.demo.infrastructure.kafkaReactor.KafkaMessageReceiver;
-import com.tesco.demo.infrastructure.kafkaReactor.KafkaPublisher;
+import com.tesco.demo.infrastructure.kafkaReactor.KafkaMessageProducer;
 import com.tesco.demo.infrastructure.repository.PriceRepository;
 import com.tesco.demo.model.Price;
 import org.junit.Assert;
@@ -32,7 +32,7 @@ public class MinimumPriceControllerTest {
     @Mock
     private PriceRepository repository;
     @Mock
-    private KafkaPublisher kafkaPublisher;
+    private KafkaMessageProducer kafkaMessageProducer;
     @Mock
     private KafkaMessageReceiver kafkaMessageReceiver;
 
