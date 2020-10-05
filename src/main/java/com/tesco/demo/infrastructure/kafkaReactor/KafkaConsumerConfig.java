@@ -3,6 +3,8 @@ package com.tesco.demo.infrastructure.kafkaReactor;
 import com.tesco.demo.application.constants.ApplicationConstants;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
@@ -27,7 +29,8 @@ public class KafkaConsumerConfig {
         receiverOptions = ReceiverOptions.<String, String>create(props).subscription(Collections.singleton(ApplicationConstants.TOPIC));
     }
 
-
+    @Bean
+    @Qualifier("reciever")
     public KafkaReceiver<String, String> receiver(){
         return KafkaReceiver.create(receiverOptions);
     }

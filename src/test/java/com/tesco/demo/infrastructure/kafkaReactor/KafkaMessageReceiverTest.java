@@ -11,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.test.context.junit4.SpringRunner;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -77,7 +76,12 @@ public class KafkaMessageReceiverTest {
         Flux<ReceiverRecord<String, String>> fluxRecord = Flux.just(receiverRecord);
         Mockito.when(kafkaConsumerConfig.receiver()).thenReturn(kafkaReceiver);
         Mockito.when(kafkaReceiver.receive()).thenReturn(fluxRecord);
-        kafkaMessageReceiver.consumeMessage();
-        Mockito.verify(kafkaReceiver, Mockito.times(1)).receive();
+        Flux<Disposable> receiverResponse = kafkaMessageReceiver.consumeMessage();
+        StepVerifier.create(receiverResponse)
+                .expectNextMatches(response -> {
+                    Assert.assertNotNull(response);
+                    return true;
+                })
+                .verifyComplete();
     }
 }

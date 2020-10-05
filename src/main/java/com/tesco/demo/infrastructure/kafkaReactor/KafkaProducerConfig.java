@@ -2,7 +2,6 @@ package com.tesco.demo.infrastructure.kafkaReactor;
 
 import com.tesco.demo.application.constants.ApplicationConstants;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.protocol.types.Field;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -28,8 +27,8 @@ public class KafkaProducerConfig {
         senderOptions = SenderOptions.create(props);
     }
 
-//    @Bean("producer")
-//    @Qualifier("producer")
+    @Bean
+    @Qualifier("producer")
     public KafkaSender<String, String> sender(){
         return KafkaSender.create(senderOptions);
     }
