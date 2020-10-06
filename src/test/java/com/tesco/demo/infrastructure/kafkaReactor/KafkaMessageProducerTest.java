@@ -1,5 +1,6 @@
 package com.tesco.demo.infrastructure.kafkaReactor;
 
+import com.tesco.demo.helper.PriceHelper;
 import com.tesco.demo.model.Price;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -35,14 +36,7 @@ public class KafkaMessageProducerTest {
 
     @Before
     public void setUp(){
-        price = Price.builder().minimumPrice(5.6).country("India")
-                .currency("INR")
-                .documentId("kafkatestminimumprice")
-                .effectiveDateTimeOffset("dssad")
-                .enrichedEventId("idsd")
-                .gtin("dsajdhaskji21oi29")
-                .reason("testing purpose")
-                .effectiveDateTime(231231231).build();
+        price = PriceHelper.priceBulder();
 
         RecordMetadata metadata = new RecordMetadata(new TopicPartition("prices", 0), 100L, 100L, 100L, 100L,
                 512, 512);
@@ -68,7 +62,6 @@ public class KafkaMessageProducerTest {
 
     @Test
     public void publisherTest(){
-        Mockito.when(kafkaProducerConfig.sender()).thenReturn(kafkaSender);
         Mockito.when(kafkaSender.send(Mockito.any(Mono.class))).thenReturn(senderResult);
         Mono<Price> publisherResponse = kafkaMessageProducer.publisher(price);
         StepVerifier.create(publisherResponse)

@@ -1,5 +1,6 @@
 package com.tesco.demo.infrastructure.kafkaReactor;
 
+import com.tesco.demo.helper.PriceHelper;
 import com.tesco.demo.model.Price;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
@@ -38,14 +39,7 @@ public class KafkaMessageReceiverTest {
 
     @Before
     public void setUp(){
-        price = Price.builder().minimumPrice(5.6).country("India")
-                .currency("INR")
-                .documentId("kafkatestminimumprice")
-                .effectiveDateTimeOffset("dssad")
-                .enrichedEventId("idsd")
-                .gtin("dsajdhaskji21oi29")
-                .reason("testing purpose")
-                .effectiveDateTime(231231231).build();
+        price = PriceHelper.priceBulder();
         ConsumerRecord<String, String> consumerRecord =
                 new ConsumerRecord<String, String>("prices", 0, 1, "consumer", price.toString());
         receiverRecord = new ReceiverRecord<String, String>(consumerRecord, new ReceiverOffset() {
@@ -74,7 +68,6 @@ public class KafkaMessageReceiverTest {
     @Test
     public void consumeMessageTest(){
         Flux<ReceiverRecord<String, String>> fluxRecord = Flux.just(receiverRecord);
-        Mockito.when(kafkaConsumerConfig.receiver()).thenReturn(kafkaReceiver);
         Mockito.when(kafkaReceiver.receive()).thenReturn(fluxRecord);
         Flux<Disposable> receiverResponse = kafkaMessageReceiver.consumeMessage();
         StepVerifier.create(receiverResponse)

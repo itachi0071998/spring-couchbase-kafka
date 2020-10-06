@@ -5,9 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.test.context.TestExecutionListeners;
 import reactor.kafka.receiver.KafkaReceiver;
-import reactor.test.StepVerifier;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KafkaConsumerConfigTest {

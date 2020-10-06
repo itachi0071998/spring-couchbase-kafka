@@ -2,6 +2,7 @@ package com.tesco.demo.application.controller;
 
 
 import com.tesco.demo.application.MinimumPriceController;
+import com.tesco.demo.helper.PriceHelper;
 import com.tesco.demo.infrastructure.kafkaReactor.KafkaMessageReceiver;
 import com.tesco.demo.infrastructure.kafkaReactor.KafkaMessageProducer;
 import com.tesco.demo.infrastructure.repository.PriceRepository;
@@ -44,15 +45,7 @@ public class MinimumPriceControllerTest {
 
     @Before
     public void setUp(){
-        price = Price.builder().minimumPrice(5.6).country("India")
-                .currency("INR")
-                .documentId("testminimumprice")
-                .effectiveDateTimeOffset("dssad")
-                .enrichedEventId("idsd")
-                .gtin("dsajdhaskji21oi29")
-                .reason("testing purpose")
-                .effectiveDateTime(231231231).build();
-
+        price = PriceHelper.priceBulder();
         documentId = "testminimumprice";
         gtin = "dsajdhaskji21oi29";
     }
@@ -62,6 +55,7 @@ public class MinimumPriceControllerTest {
     @Test
     public void createMinimumPriceTest(){
         Mockito.when(repository.save(price)).thenReturn(Mono.just(price));
+        Mockito.when(kafkaMessageProducer.publisher(price)).thenReturn(Mono.just(price));
         Mono<ResponseEntity<String>> createMinimumPriceResponse = priceController.createMinimumPrice(documentId, price);
         StepVerifier.create(createMinimumPriceResponse)
                 .expectNextMatches(responseEntity -> {
@@ -88,6 +82,7 @@ public class MinimumPriceControllerTest {
     public void updateMinimumPriceTest(){
         Mockito.when(repository.findById(documentId)).thenReturn(Mono.just(price));
         Mockito.when(repository.save(price)).thenReturn(Mono.just(price));
+        Mockito.when(kafkaMessageProducer.publisher(price)).thenReturn(Mono.just(price));
         Mono<ResponseEntity<String>> updateMinimumPriceResponse = priceController.updateMinimumPrice(documentId, price);
         StepVerifier.create(updateMinimumPriceResponse)
                 .expectNextMatches(responseEntity -> {
