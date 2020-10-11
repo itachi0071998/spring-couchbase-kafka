@@ -1,6 +1,6 @@
 # spring-couchbase-kafka
 ## What is Spring?
-This Spring Boot reactive demo project exposes a RESTful web API to apply CRUD (create, read, update, delete) operations on a simple Product object, which is persisted in a couchbase database. And also to produce the message using reactive kafka and consuming and marking it as acknowledged. The implementation was done in the reactive Webflux stack, which is an alternative to the more commonly known Spring Web MVC stack.
+This Spring Boot reactive demo project exposes a RESTful web API to apply CRUD (create, read, update, delete) operations on a simple Product object, which is persisted in a couchbase database. It also produces the message using reactive kafka and consuming and marking it as acknowledged. The implementation was done in the reactive Webflux stack, which is an alternative to the more commonly known Spring Web MVC stack.
 
 For more information about Webflux, visit https://docs.spring.io/spring/docs/current/spring-framework-reference/web-reactive.html
 
@@ -21,11 +21,10 @@ The project is structured as follows
 ## How to configure Couchbase?
 - Download and install couchbase(or you can use docker image of couchbase I have added Dockerfile in couchbase folder with the configure file which will configure the couchbase for you)
 - Create a cluster in couchbase(remember by default couchbase is connected to port 8091 and that is what I have configured in this app if you want to change the port you can change it in Application.properties in the resource folder in main)
-- After creating the cluster you need to add bucket with name `minimumprice`
-- After that create a new user in security with name `minimumprice` (or the bucket which you want to create bucket name should be as same as the username) and give ful admin access
-- After that put password as `123456` 
+- In `buckets` create bucket with name `minimumprice`
+- In `security` create a new user with name `minimumprice` (or the bucket which you want to create bucket name should be as same as the username) with password `123456` and give full admin access
 
-You can put any password and bucket name but remember the bucketname should be same as the user name which you will create. You can change all this in `application.properties`
+You can put any password and bucket name but remember the bucket name should be same as the user name which you will create. You can change all this in `application.properties`
 
 For kafka you just need to download kafka and run it. By default, kafka runs on port 9092. If you are changing the kafka port you can change in the `ApplicationConstants` java file in application/constant
 
