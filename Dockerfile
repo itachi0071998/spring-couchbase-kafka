@@ -1,5 +1,5 @@
-FROM adoptopenjdk:11.0.4_11-jre-hotspot
-ARG JAR_FILE=build/libs/*.jar
-COPY ${JAR_FILE} /app/
-WORKDIR /app
-ENTRYPOINT ["java","/src/main/java/com/tesco/demo/MinimumPriceApplication.java"]
+FROM openjdk:11
+ADD build/libs/demo-0.0.1-SNAPSHOT.jar app.jar
+RUN bash -c 'touch /app.jar'
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","/app.jar"]

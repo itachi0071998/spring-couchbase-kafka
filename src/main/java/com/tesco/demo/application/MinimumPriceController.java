@@ -5,8 +5,8 @@ import com.tesco.demo.application.constants.ApplicationConstants;
 import com.tesco.demo.application.constants.EndPointConstant;
 import com.tesco.demo.infrastructure.kafkaReactor.KafkaMessageReceiver;
 import com.tesco.demo.infrastructure.kafkaReactor.KafkaMessageProducer;
-import com.tesco.demo.model.Price;
 import com.tesco.demo.infrastructure.repository.PriceRepository;
+import com.tesco.demo.model.Price;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,11 +21,14 @@ import reactor.core.publisher.Mono;
 @RequestMapping(EndPointConstant.MINIMUM_PRICE)
 public class MinimumPriceController {
 
-    @Autowired
-    private PriceRepository repository;
+
 
     @Autowired
     private KafkaMessageProducer kafkaMessageProducer;
+
+    @Autowired
+    private PriceRepository repository;
+    
 
     @Autowired
     private KafkaMessageReceiver kafkaConsumer;
@@ -75,7 +78,8 @@ public class MinimumPriceController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Flux getMinimumPriceByGtin(@RequestParam String gtin){
-        return repository.findByGtin(gtin).doOnNext(response -> log.info("the response is {}", response))
+        return repository.findByGtin(gtin)
+                .doOnNext(response -> log.info("the response is {}", response))
                 .doOnError(error -> {
                     log.error("the error is {}", error);
                 ResponseEntity.notFound().build();})
